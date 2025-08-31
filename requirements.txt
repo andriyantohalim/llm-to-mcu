@@ -1,1 +1,5 @@
 pyserial
+ollama
+langgraph
+langchain-community
+langchain-core
