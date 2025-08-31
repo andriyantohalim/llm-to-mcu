@@ -28,22 +28,44 @@ class SerialController:
             Response string from device
         """
         try:
-            # Clear input buffer
+            # Clear input and output buffers
             self.serial_port.flushInput()
+            self.serial_port.flushOutput()
             
             # Send command with newline
             command_bytes = (command + '\n').encode('utf-8')
             self.serial_port.write(command_bytes)
             print(f"Sent: {command}")
             
-            # Wait a bit for response
-            time.sleep(0.1)
+            # Wait a bit longer for response
+            time.sleep(0.2)
             
-            # Read response
-            response = self.serial_port.readline().decode('utf-8').strip()
-            print(f"Received: {response}")
+            # Read all available responses
+            responses = []
+            while self.serial_port.in_waiting > 0:
+                line = self.serial_port.readline().decode('utf-8').strip()
+                if line:  # Only add non-empty lines
+                    responses.append(line)
+                    print(f"Received: {line}")
             
-            return response
+            # Filter responses to get the actual device response
+            for response in responses:
+                # Skip echo, prompt characters, and empty responses
+                if (response.lower() != command.lower() and 
+                    response not in ['>', '$', '#'] and  # Common prompt characters
+                    len(response) > 1):
+                    return response
+            
+            # If no valid response found, try the delayed read approach
+            if len(responses) >= 1 and responses[0].lower() == command.lower():
+                time.sleep(0.1)
+                if self.serial_port.in_waiting > 0:
+                    actual_response = self.serial_port.readline().decode('utf-8').strip()
+                    if actual_response and actual_response not in ['>', '$', '#']:
+                        print(f"Received (delayed): {actual_response}")
+                        return actual_response
+        
+            return None  # No valid response received
             
         except Exception as e:
             print(f"Error sending command '{command}': {e}")
