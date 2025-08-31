@@ -24,7 +24,7 @@ A Python project that enables natural language control of microcontroller device
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/andriyantohalim/llm-to-mcu
    cd llm-to-mcu
    ```
 
